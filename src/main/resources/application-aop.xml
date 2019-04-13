@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans 
+	xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:aop="http://www.springframework.org/schema/aop"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop.xsd">
+	
+    <bean id="userDao" class="com.kgc.spring.dao.UserDaoImpl"></bean>
+
+    <bean id="service" class="com.kgc.spring.service.UserServiceImpl">
+        <property name="dao" ref="userDao"></property>
+    </bean>
+    
+    <!-- 声明增强方法所在的Bean -->
+    <bean id="theLogger" class="com.kgc.spring.aop.UserServiceLogger"></bean>
+    
+    <!-- 配置切面 -->
+    <aop:config>
+        <!-- 定义切入点 -->
+        <!-- 表达式: 可见性  返回值类型  包名.类名.方法名(参数类型)  抛出异常类型 -->
+        <aop:pointcut id="servicePT" 
+        	expression="execution(* com.kgc.spring.service..*.*(..))" />
+            
+        <!-- 引用包含增强方法的Bean -->
+        <aop:aspect ref="theLogger">
+            <!-- method指定通知增强类的某个方法,pointcut-ref指定切入点 -->
+            <!-- 前置通知 -->
+            <aop:before method="before" pointcut-ref="servicePT" />
+            <!-- 后置通知,返回结果时执行 -->
+            <aop:after-returning method="afterReturning" pointcut-ref="servicePT" returning="result" />
+            <!-- 异常通知:方法发生异常并未被捕获时执行 -->
+            <aop:after-throwing method="afterThrow" pointcut-ref="servicePT" throwing="e"/>
+            <!-- 最终通知,不管时候发生异常,方法结束时执行 -->
+           	<aop:after method="after"  pointcut-ref="servicePT" />
+           	<!-- 环绕通知 -->
+           	<aop:around method="around" pointcut-ref="servicePT"/>
+        </aop:aspect>
+    </aop:config>
+    
+</beans>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context" 
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx.xsd">
+	
+	<!-- 自动扫描,识别Ioc注解并生成Bean -->
+	<context:component-scan base-package="com.kgc"/>
+	
+	<!-- 启用AspectJ的支持 -->
+	<aop:aspectj-autoproxy />
+	<!-- 将切面程序声明为Bean -->
+	<bean class="com.kgc.spring.aop.UserServiceLoggerAnnotation"/>
+	
+	<!-- 加载外部properties文件 -->
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location" value="classpath:database.properties" />
+	</bean>
+	
+	<!-- 配置数据池 -->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+		<property name="driverClassName">
+			<value>${driver}</value>
+		</property>
+		<property name="url">
+			<value>${url}</value>
+		</property>
+		<property name="username">
+			<value>${user}</value>
+		</property>
+		<property name="password">
+			<value>${password}</value>
+		</property>
+		<property name="maxActive">
+			<value>50</value>
+		</property>
+		<property name="initialSize">
+			<value>5</value>
+		</property>
+		<property name="maxWait">
+			<value>60000</value>
+		</property>
+		<property name="minIdle">
+			<value>1</value>
+		</property>
+	</bean>
+	
+	<!-- 配置SqlSessionFactoryBean -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 引用数据源组件 -->
+        <property name="dataSource" ref="dataSource" />
+        <!-- 引用MyBatis配置文件中的配置 -->
+        <property name="configLocation" value="classpath:mybatis-simple-config.xml" />
+        <!-- 配置SQL映射文件信息 -->
+        <property name="mapperLocations">
+            <list>
+                <value>classpath:sqlMapper/*.xml</value>
+                <value>classpath:com/kgc/dao/**/*.xml</value>
+            </list>
+        </property>
+    </bean>
+	
+	<!-- 配置SqlSessionTemplate -->
+    <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+        <constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory" />
+    </bean>
+    
+    <!-- 定义一个Dao层IMPL,注入sqlSessionTemplate,从而调用SQL -->
+    <bean id="userDaoByTemplate" class="com.kgc.dao.user.UserMapper">
+    	<property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+    </bean>
+	
+	<!-- 生成指定Mapper接口的实例 -->
+	<bean id="userDaoByMapperFactory" class="org.mybatis.spring.mapper.MapperFactoryBean">
+	    <property name="mapperInterface" value="com.kgc.dao.user.UserMapper"/>
+	    <property name="sqlSessionFactory" ref="sqlSessionFactory"/>
+	</bean>
+	
+	<!-- 定义事务管理器 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+	
+	<!-- 定义事务通知 -->
+	<tx:advice id="txAdvice">
+        <tx:attributes>
+            <tx:method name="find*" propagation="SUPPORTS" />
+            <tx:method name="add*" propagation="REQUIRED" />
+            <tx:method name="del*" propagation="REQUIRED" />
+            <tx:method name="update*" propagation="REQUIRED" />
+            <tx:method name="*" propagation="REQUIRED" />
+        </tx:attributes>
+    </tx:advice>
+    <!-- 定义事务切面  -->
+    <aop:config>
+        <aop:pointcut id="serviceMethod" expression="execution(* com.kgc.service..*.*(..))" />
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethod" />
+    </aop:config>
+	
+</beans>

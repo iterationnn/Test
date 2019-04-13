@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context" 
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/aop
+	http://www.springframework.org/schema/aop/spring-aop.xsd
+	http://www.springframework.org/schema/tx
+	http://www.springframework.org/schema/tx/spring-tx.xsd">
+	
+	<!-- 自动扫描,识别IOC注解并生成Bean -->
+	<context:component-scan base-package="com.kgc"/>
+	
+	<!-- 启用AspectJ的支持 -->
+	<aop:aspectj-autoproxy />
+	
+	<!-- 加载外部properties文件 -->
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="location" value="classpath:database.properties" />
+	</bean>
+	
+	<!-- 配置数据池 -->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+		<property name="driverClassName">
+			<value>${driver}</value>
+		</property>
+		<property name="url">
+			<value>${url}</value>
+		</property>
+		<property name="username">
+			<value>${user}</value>
+		</property>
+		<property name="password">
+			<value>${password}</value>
+		</property>
+		<property name="maxActive">
+			<value>50</value>
+		</property>
+		<property name="initialSize">
+			<value>2</value>
+		</property>
+		<property name="maxWait">
+			<value>60000</value>
+		</property>
+		<property name="minIdle">
+			<value>1</value>
+		</property>
+	</bean>
+	
+	<!-- 配置SqlSessionFactoryBean -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 引用数据源组件 -->
+        <property name="dataSource" ref="dataSource" />
+        <!-- 引用MyBatis配置文件中的配置 -->
+        <property name="configLocation" value="classpath:mybatis-simple-config.xml" />
+        <!-- 配置SQL映射文件信息 -->
+        <property name="mapperLocations">
+            <list>
+                <value>classpath:sqlMapper/*.xml</value>
+                <value>classpath:com/kgc/dao/**/*.xml</value>
+            </list>
+        </property>
+    </bean>
+	
+	<!-- 自动扫描所有的Dao层接口 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.kgc.dao" />
+	</bean>
+	
+	<!-- 定义事务管理器 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+	
+	<!-- 开启事务注解 -->
+	<tx:annotation-driven transaction-manager="transactionManager"/>
+	
+</beans>

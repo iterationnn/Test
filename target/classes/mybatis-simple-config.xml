@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<!-- mybatis配置 -->
+<configuration>
+	
+	<settings>
+		<!-- 配置mybatis的log实现为LOG4J -->
+		<setting name="logImpl" value="LOG4J" />
+		<!-- 设置resultMap自动映射级别  NONE  PARTIAL(默认)  FULL-->
+		<setting name="autoMappingBehavior" value="PARTIAL" />
+		<!-- 设置2级缓存,默认false -->
+		<setting name="cacheEnabled" value="false"/>
+		<!-- 设置延迟加载,默认false-->
+		<setting name="lazyLoadingEnabled" value="true" />
+		<!-- 设置积极加载所有属性,当访问对象A属性时,其他属性一并加载,默认true -->
+		<setting name="aggressiveLazyLoading" value="true" />
+	</settings>
+    
+	<!-- mapper.xml返回类型所在的包 -->
+	<typeAliases> 
+		<package name="com.kgc.pojo"/>
+	</typeAliases>
+		
+	<!-- 配置分页插件 -->
+    <plugins>
+        <plugin interceptor="com.github.pagehelper.PageInterceptor">
+            <!-- 设置数据库类型  oracle,mysql,sqlite,db2,sqlserver,h2 等12种-->
+            <property name="helperDialect" value="mysql"/>
+        </plugin>
+    </plugins>
+    
+    <mappers></mappers>
+
+</configuration>

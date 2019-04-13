@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<!-- 通过这个配置文件完成mybatis与数据库的连接 -->
+<configuration>
+	<!-- 引入 database.properties 文件-->
+	<properties resource="database.properties"/>
+	
+	<settings>
+		<!-- 配置mybatis的log实现为LOG4J -->
+		<setting name="logImpl" value="LOG4J" />
+		<!-- 设置resultMap自动映射级别  NONE  PARTIAL(默认)  FULL-->
+		<setting name="autoMappingBehavior" value="PARTIAL" />
+		<!-- 设置2级缓存,默认false -->
+		<setting name="cacheEnabled" value="false"/>
+		<!-- 设置延迟加载,默认false-->
+		<setting name="lazyLoadingEnabled" value="true" />
+		<!-- 设置积极加载所有属性,当访问对象A属性时,其他属性一并加载,默认true -->
+		<setting name="aggressiveLazyLoading" value="true" />
+	</settings>
+    
+	<!-- mapper.xml返回类型所在的包 -->
+	<typeAliases> 
+		<package name="com.kgc.pojo"/>
+	</typeAliases>
+		
+	<!-- 配置分页插件 -->
+    <plugins>
+        <plugin interceptor="com.github.pagehelper.PageInterceptor">
+            <!-- 设置数据库类型  oracle,mysql,sqlite,db2,sqlserver,h2 等12种-->
+            <property name="helperDialect" value="mysql"/>
+        </plugin>
+    </plugins>
+    
+	<!-- 配置环境 -->
+	<environments default="development">
+	
+		<environment id="development">
+			<!--配置事务管理，采用JDBC的事务管理  -->
+			<transactionManager type="JDBC"></transactionManager>
+			<!-- POOLED:mybatis自带的数据源，JNDI:基于tomcat的数据源 -->
+			<dataSource type="POOLED">
+				<property name="driver" value="${driver}"/>
+				<property name="url" value="${url}"/>
+				<property name="username" value="${user}"/>
+				<property name="password" value="${password}"/>
+			</dataSource>
+		</environment>
+			
+		<environment id="localhost">
+			<transactionManager type="JDBC"></transactionManager>
+			<dataSource type="POOLED">
+				<property name="driver" value="com.mysql.jdbc.Driver"/>
+				<property name="url" value="jdbc:mysql://localhost:3306/JT78"/>
+				<property name="username" value="root"/>
+				<property name="password" value="root"/>
+			</dataSource>
+		</environment>
+	</environments>
+	
+	<!-- 将mapper文件加入到配置文件中 -->
+	<mappers>
+		<mapper resource="com/kgc/dao/user/UserMapper.xml"/>
+	</mappers>
+
+</configuration>

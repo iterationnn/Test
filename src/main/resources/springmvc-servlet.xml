@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/context
+    http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/mvc
+    http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+	<!-- 开启SpringMVC注解支持 -->
+	<context:component-scan base-package="com.kgc.controller" />
+	<mvc:annotation-driven />
+	
+	<!-- 开启默认的servlet映射,当请求的的url没有对应控制器时,查看是否有该路径的静态资源 -->
+	<mvc:default-servlet-handler/>
+
+	<!-- 完成视图的对应 -->
+	<!-- 对转向页面的路径解析。prefix：前缀， suffix：后缀 -->
+	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/jsp/" />
+		<property name="suffix" value=".jsp" />
+	</bean>
+
+	<!-- 文件上传配置 -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+	    <property name="maxUploadSize" value="5000000"/><!-- (in bytes) -->
+	    <property name="defaultEncoding" value="UTF-8"/>
+	</bean>
+	
+	<!-- 拦截器配置 -->
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**" />
+			<mvc:exclude-mapping path="/sys/**" />
+			<mvc:exclude-mapping path="/statics/**" />
+			<bean class="com.kgc.filter.SysInterceptor" />
+		</mvc:interceptor>
+	</mvc:interceptors>
+	
+</beans>

@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 命名空间 -->
+<mapper namespace="com.kgc.dao.user.UserMapper">
+
+	<!-- 使用缓存 -->
+	<cache eviction="FIFO" flushInterval="60000"  size="512" readOnly="true"/>
+
+	<!-- 定义一个SQL片段 -->
+	<sql id="basic_sql">
+		id,
+		userCode,
+		userName,
+		userPassword,
+		gender,
+		birthday,
+		phone,
+		address,
+		userRole,
+		createdBy,
+		creationDate,
+		modifyBy,
+		modifyDate
+	</sql>
+
+	<!-- 查询用户表记录数 -->
+	<select id="count" resultType="int">
+		select count(1) as count from
+		smbms_user
+	</select>
+
+	<!-- 获取所有的用户 -->
+	<select id="getUserList" resultType="com.kgc.pojo.User">
+		select 
+		<include refid="basic_sql"/>
+		from smbms_user
+	</select>
+
+	<!-- 定义一个resultMap 使java对象与数据库字段关联 -->
+	<resultMap type="com.kgc.pojo.User" id="userResult">
+		<!-- column是查询结果的字段名 , property是Java对象的属性名 -->
+		<id column="id" property="id" />
+		<result column="userName" property="userName" />
+		<result column="roleName" property="userRoleName" />
+		<!-- 没有指定的自动匹配 -->
+	</resultMap>
+
+	<!-- 查询用户并携带角色名 -->
+	<!-- 返回一个resultMap,值等于定义的resultMap的id -->
+	<select id="getUserWithRole" resultMap="userResult">
+		select
+		u.*,r.roleName
+		from 
+		smbms_user as u left join smbms_role as r
+		on u.userRole = r.id
+	</select>
+
+	<!-- 依据用户名模糊查询 -->
+	<select id="findUserByName" resultType="com.kgc.pojo.User" parameterType="String">
+		select * from
+		smbms_user where userName like
+		concat('%',#{userName},'%')
+	</select>
+	
+	<!-- 用对象入参,引用对象属性名 -->
+	<select id="findUserByObj" resultType="com.kgc.pojo.User" parameterType="com.kgc.pojo.User">
+		select * from
+		smbms_user
+		where userName like
+		concat('%',#{userName},'%')
+		and userRole = #{userRole}
+	</select>
+
+	<!-- 用Map入参,引用Key -->
+	<select id="findUserByMap" resultType="com.kgc.pojo.User" parameterType="java.util.Map">
+		select * from
+		smbms_user
+		where userName like
+		concat('%',#{uName},'%')
+		and userRole = #{uRole}
+	</select>
+
+	<!-- 直接@Param 参数入参,应用@Param指定的名字 -->
+	<select id="findUserByParam" resultType="com.kgc.pojo.User">
+		select * from smbms_user
+		<where>
+			<if test="userName != null">
+				and userName like concat('%',#{userName},'%')
+			</if>
+			<if test="roleId != null">
+				and userRole = #{roleId}
+			</if>
+		</where>
+	</select>
+
+	<!-- 依据多个条件中的某一个查询用户 -->
+	<select id="findUserByParamChoose" resultType="com.kgc.pojo.User">
+		select * from smbms_user
+		<where>
+			<choose>
+				<when test="userCode != null">
+					and userCode = #{userCode}
+				</when>
+				<when test="userName != null">
+					and userName like concat('%',#{userName},'%')
+				</when>
+				<when test="roleId != null">
+					and userRole = #{roleId}
+				</when>
+				<otherwise>
+					and year(creationDate) = year(now())
+				</otherwise>
+			</choose>
+		</where>
+	</select>
+
+	<!-- 依据多个角色查询用户,foreach遍历集合 -->
+	<select id="findUserByRoles" resultType="com.kgc.pojo.User" parameterType="java.util.List">
+		select * from smbms_user where userRole in 
+		<foreach collection="list" item="roleId" separator="," open="(" close=")">
+			#{roleId}
+		</foreach>
+	</select>
+
+	<!-- 新增用户 -->
+	<insert id="addUser" parameterType="com.kgc.pojo.User">
+		insert into smbms_user values
+		(
+		#{id},
+		#{userCode},
+		#{userName},
+		#{userPassword},
+		#{gender},
+		#{birthday},
+		#{phone},
+		#{address},
+		#{userRole},
+		#{createdBy},
+		now(),
+		#{modifyBy},
+		#{modifyDate}
+		)
+	</insert>
+
+	<!-- 批量增加用户 -->
+	<insert id="addUsersBatch" parameterType="java.util.List">
+		insert into smbms_user values
+		<foreach collection="list" item="user" index="index" separator=",">
+			(
+			#{user.id},
+			#{user.userCode},
+			#{user.userName},
+			#{user.userPassword},
+			#{user.gender},
+			#{user.birthday},
+			#{user.phone},
+			#{user.address},
+			#{user.userRole},
+			#{user.createdBy},
+			now(),
+			#{user.modifyBy},
+			#{user.modifyDate}
+			)
+		</foreach>
+	</insert>
+	
+	<!-- 修改用户 -->
+	<update id="modifyUserById" parameterType="com.kgc.pojo.User">
+		update smbms_user
+		<set>
+			<if test="userCode != null and userCode !='' ">
+				userCode = #{userCode},
+			</if>
+			<if test="userName != null and userName !='' ">
+				userName = #{userName},
+			</if>
+			<if test="userPassword != null and userPassword != ''">
+				userPassword = #{userPassword},
+			</if>
+			<if test="gender != null">
+				gender = #{gender},
+			</if>
+			<if test="birthday != null">
+				birthday = #{birthday},
+			</if>
+			<if test="phone != null and phone !='' ">
+				phone = #{phone},
+			</if>
+			<if test="address != null and address != '' ">
+				address = #{address},
+			</if>
+			<if test="userRole != null">
+				userRole = #{userRole},
+			</if>
+			<if test="modifyBy != null and modifyBy !='' ">
+				modifyBy = #{modifyBy},
+			</if>
+			modifyDate = now()
+		</set>
+		where id = #{id}
+	</update>
+
+	<!-- 删除用户 -->
+	<delete id="deleteUserById" parameterType="int">
+		delete from smbms_user where id = #{id}
+	</delete>
+
+	<!-- 一对一关联查询 -->
+	<resultMap type="com.kgc.pojo.User" id="userWithRoleResult_second" >
+		<id column="id" property="id" />
+		<result column="userName" property="userName" />
+		<result column="roleName" property="userRoleName" />
+		<association property="role" javaType="com.kgc.pojo.Role">
+			<result column="id(1)" property="id" />
+			<result column="roleName" property="roleName" />
+			<result column="roleCode" property="roleCode" />
+		</association>
+	</resultMap>
+
+	<resultMap type="com.kgc.pojo.Role" id="roleResult">
+		<result column="id(1)" property="id" />
+		<result column="roleName" property="roleName" />
+		<result column="roleCode" property="roleCode" />
+	</resultMap>
+	
+	<resultMap type="com.kgc.pojo.User" id="userWithRoleResult"  autoMapping="true">
+		<id column="id" property="id" />
+		<result column="userName" property="userName" />
+		<result column="roleName" property="userRoleName" />
+		<association property="role" javaType="com.kgc.pojo.Role" resultMap="roleResult" />
+	</resultMap>
+
+	<!-- 查询所有的用户以及用户的角色信息 -->
+	<select id="findUserWithRoleObjById" resultMap="userWithRoleResult">
+		select *
+		from 
+		smbms_user as u left join smbms_role as r
+		on u.userRole = r.id
+		where u.id = #{id}
+	</select>
+
+	<!-- 一对多关联查询 -->
+	<resultMap type="com.kgc.pojo.Address" id="AddressResult">
+		<id column="id(1)" property="id" />
+		<result column="contact" property="contact" />
+		<result column="addressDesc" property="addressDesc" />
+		<result column="postCode" property="postCode" />
+		<result column="tel" property="tel" />
+	</resultMap>
+
+	<resultMap type="com.kgc.pojo.User" id="userWithAddResult" autoMapping="true">
+		<id column="id" property="id" />
+		<result column="userName" property="userName" />
+		<result column="roleName" property="userRoleName" />
+		<collection property="addressList" ofType="com.kgc.pojo.Address" resultMap="AddressResult" />
+	</resultMap>
+
+	<!-- 查询所有的用户以及用户的收获地址信息 -->
+	<select id="findUserWithAddressById" parameterType="int" resultMap="userWithAddResult">
+		select *
+		from smbms_user as u left join smbms_address as a
+		on u.id = a.userId
+		where u.id = #{id}
+	</select>
+	
+	<!-- 二段查询 -->
+	<resultMap type="com.kgc.pojo.User" id="userRes" autoMapping="true">
+		<id column="id" property="id"/>
+		<result column="userName" property="userName"/>
+		<result column="userRole" property="userRole"/>
+		<association property="role" select="getRoleById" column="userRole"/>
+	</resultMap>
+
+	<select id="getUserWithRoleSecond" resultMap="userRes">
+		select * from smbms_user  
+	</select>
+	
+	<select id="getRoleById" resultType="com.kgc.pojo.Role">
+		select * from smbms_role where id = #{id}
+	</select>
+
+	<!-- 分页查询 -->
+	<sql id="page_sql">
+		limit #{index},#{pageSize} 
+	</sql>
+	
+	<select id="findUserByPage" resultType="com.kgc.pojo.User" parameterType="String">
+		select * from smbms_user
+		<where>
+			<if test="userName!=null">
+				 userName like concat('%',#{userName},'%') 
+			</if>
+		</where>
+		order by id
+		<include refid="page_sql"/>
+	</select>
+</mapper>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans 
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+	http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<!-- 通过bean元素声明需要Spring创建的实例。该实例的类型通过class属性指定，并通过id属性为该实例指定一个名称，以便在程序中使用 -->
+	<bean id="helloSpring" class="com.kgc.spring.bean.HelloSpring">
+		<!-- property元素用来为实例的属性赋值,此处实际是调用setWho()方法实现赋值操作 -->
+		<property name="who">
+			<!-- 此处将字符串"Spring"赋值给who属性 -->
+			<value>Spring!!</value>
+		</property>
+	</bean>
+	
+	<!-- 声明了一个角色和一个收货地址 -->
+	<bean id="admin" class="com.kgc.pojo.Role" >
+		<property name="roleName" value="系统管理员"/>
+	</bean>
+	<bean id="shengZhen" class="com.kgc.pojo.Address">
+		<property name="addressDesc" value="深圳市南头街道"/>
+	</bean>
+	
+	<bean id="zhangSan" class="com.kgc.pojo.User">
+		<!-- 属性为String类型的注入 -->
+		<property name="userName" value="张三"/>
+		<!-- 属性为对象类型的注入 -->
+		<property name="role" ref="admin"/>
+		<!-- 属性为集合类型的注入 -->
+		<property name="addressList">
+			<list>
+				<!-- 引用外部的Bean -->
+				<ref bean="shengZhen"/>
+				<!-- 内部定义Bean -->
+				<bean id="guangZhou" class="com.kgc.pojo.Address">
+					<property name="addressDesc" value="广州白云大道"/>
+				</bean>
+			</list>
+			<!-- <array></array> 数组类型注入 -->
+			<!-- <map></map> Map类型注入-->
+			<!-- <set></set> Set类型注入-->
+			<!-- <props></props> Propertion类型注入-->
+		</property>
+		<property name="userCode">
+			<!-- null值注入 -->
+			<null></null>
+			<!-- <value></value> 空字符串注入-->
+		</property>
+	</bean>
+    
+    <!-- 构造方法注入 -->
+    <bean id="liSi" class="com.kgc.pojo.User">
+    	<!-- 指定参数名注入 -->
+    	<constructor-arg name="userCode" value="No:89757"/>
+    	<!-- 指定参数列表的下标(从0开始)注入 -->
+    	<constructor-arg index="1" value="名字"/>
+    </bean>
+    
+    <bean id="wangWu" class="com.kgc.pojo.User">
+    	<!-- 自动匹配类型注入 -->
+    	<constructor-arg value="WangWu"/>
+    	<constructor-arg ref="admin"/>
+    </bean>
+    
+    <!-- P命名空间注入 -->
+    <bean id="zhuLiu" class="com.kgc.pojo.User" 
+    	p:id="101" p:userName="ZhuLiu" p:role-ref="admin"/>
+    
+</beans>
